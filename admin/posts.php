@@ -1,3 +1,92 @@
+<?php
+
+  require_once '../functions.php';
+  xiu_get_current_user();
+
+  function convert_status($status){
+    switch($status){
+      case 'drafted':
+      return '草稿';
+      case 'published':
+      return '已发布';
+      case 'trashed':
+      return '回收站';
+      default:
+      return '未知';
+    }
+  }
+
+  function convert_time($created){
+      // 设置默认时区！！！
+    date_default_timezone_set('UTC');
+
+    // 转换为时间戳
+    $timestamp = strtotime($created);
+
+    // 格式化并返回 由于 r 是特殊字符，所以需要 \r 转义一下
+    return date('Y年m月d日 <b\r> H:i:s', $timestamp);
+  }
+  // 在筛选问题中，如果只出现问号，但是没有参数的传入，该区看看表单的name值是否填写完整
+  //请求数据--筛选条件
+  $query = '';
+  $where = ' 1 = 1 ';
+  // 状态筛选
+if (isset($_GET['s']) && $_GET['s'] != 'all') {
+  $where .= sprintf(" and posts.status = '%s'", $_GET['s']);
+  $query .= '&s=' . $_GET['s'];
+}
+  // 分类筛选
+if (isset($_GET['c']) && $_GET['c'] != 'all') {
+  $where .= sprintf(" and posts.category_id = %d", $_GET['c']);
+  $query .= '&c=' . $_GET['c'];
+}
+
+  // is_numeric() 函数用于检测变量是否为数字或数字字符串。
+  $page = isset($_GET['p']) && is_numeric($_GET['p']) ? intval($_GET['p']) : 1;
+  // $page = empty($_GET['page']) ? 1 : (int)$_GET['page'];
+  $size = 10;
+  $offset = ($page-1) * 10;
+  //总条数
+  $totle_count = intval(xiu_query('
+  select count(1) as count
+  from posts
+  inner join users on posts.user_id = users.id
+  inner join categories on posts.category_id = categories.id
+  where' .$where)[0]['count']);
+  //总页数 ---ceil向上取整
+  $totle_page = ceil($totle_count / $size);
+
+  if($page <= 0){
+    header('Location: /admin/posts.php?p=1' . $query);
+    exit;
+  }
+  
+  if($page > $totle_page){
+  header('Location: /admin/posts.php?p=' . $totle_page . $query);
+    exit;
+  }
+
+  $posts = xiu_query(sprintf('
+  select
+  posts.id,
+  posts.title,
+  posts.created,
+  posts.status,
+  categories.name as category_name,
+  users.nickname as author_name
+  from posts
+  inner join users on posts.user_id = users.id
+  inner join categories on posts.category_id = categories.id
+  where %s
+	ORDER BY posts.created DESC
+	LIMIT %d,%d
+ ',$where,$offset,$size));
+ 
+ $category = xiu_query('select * from categories');
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -13,13 +102,7 @@
   <script>NProgress.start()</script>
 
   <div class="main">
-    <nav class="navbar">
-      <button class="btn btn-default navbar-btn fa fa-bars"></button>
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="profile.html"><i class="fa fa-user"></i>个人中心</a></li>
-        <li><a href="login.html"><i class="fa fa-sign-out"></i>退出</a></li>
-      </ul>
-    </nav>
+  <?php include 'inc/navbar.php' ;?>
     <div class="container-fluid">
       <div class="page-title">
         <h1>所有文章</h1>
@@ -31,25 +114,24 @@
       </div> -->
       <div class="page-action">
         <!-- show when multiple checked -->
-        <a class="btn btn-danger btn-sm" href="javascript:;" style="display: none">批量删除</a>
-        <form class="form-inline">
-          <select name="" class="form-control input-sm">
-            <option value="">所有分类</option>
-            <option value="">未分类</option>
+        <a class="btn btn-danger btn-sm btn-all" href="/admin/post-delect.php" style="display: none">批量删除</a>
+        <form class="form-inline" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+          <select name="c" class="form-control input-sm">
+            <option value="all">所有分类</option>
+            <?php foreach($category as $item): ?>
+            <option value="<?php echo $item['id']; ?>"<?php echo isset($_GET['c']) && $_GET['c'] == $item['id'] ? ' selected' : ''; ?>><?php echo $item['name']; ?></option>
+            <?php endforeach ?>
           </select>
-          <select name="" class="form-control input-sm">
-            <option value="">所有状态</option>
-            <option value="">草稿</option>
-            <option value="">已发布</option>
+          <select name="s" class="form-control input-sm">
+            <option value="all">所有状态</option>
+            <option value="drafted"<?php echo isset($_GET['s']) && $_GET['s'] == 'drafted' ? ' selected' : ''; ?>>草稿</option>
+            <option value="published"<?php echo isset($_GET['s']) && $_GET['s'] == 'published' ? ' selected' : ''; ?>>已发布</option>
+            <option value="trashed"<?php echo isset($_GET['s']) && $_GET['s'] == 'trashed' ? ' selected' : ''; ?>>回收站</option>
           </select>
           <button class="btn btn-default btn-sm">筛选</button>
         </form>
         <ul class="pagination pagination-sm pull-right">
-          <li><a href="#">上一页</a></li>
-          <li><a href="#">1</a></li>
-          <li><a href="#">2</a></li>
-          <li><a href="#">3</a></li>
-          <li><a href="#">下一页</a></li>
+          <?php xiu_pagination($page,$totle_page,'?p=%d'. $query); ?>
         </ul>
       </div>
       <table class="table table-striped table-bordered table-hover">
@@ -65,87 +147,57 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td class="text-center"><input type="checkbox"></td>
-            <td>随便一个名称</td>
-            <td>小小</td>
-            <td>潮科技</td>
-            <td class="text-center">2016/10/07</td>
-            <td class="text-center">已发布</td>
-            <td class="text-center">
-              <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-            </td>
-          </tr>
-          <tr>
-            <td class="text-center"><input type="checkbox"></td>
-            <td>随便一个名称</td>
-            <td>小小</td>
-            <td>潮科技</td>
-            <td class="text-center">2016/10/07</td>
-            <td class="text-center">已发布</td>
-            <td class="text-center">
-              <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-            </td>
-          </tr>
-          <tr>
-            <td class="text-center"><input type="checkbox"></td>
-            <td>随便一个名称</td>
-            <td>小小</td>
-            <td>潮科技</td>
-            <td class="text-center">2016/10/07</td>
-            <td class="text-center">已发布</td>
-            <td class="text-center">
-              <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-            </td>
-          </tr>
+          <?php foreach($posts as $item) : ?>
+            <tr>
+              <td class="text-center"><input type="checkbox" data-id="<?php echo $item['id']; ?>"></td>
+              <td><?php echo $item['title']; ?></td>
+              <td><?php echo $item['author_name']; ?></td>
+              <td><?php echo $item['category_name']; ?></td>
+              <td class="text-center"><?php echo convert_time($item['created']); ?></td>
+              <td class="text-center"><?php echo convert_status($item['status']); ?></td>
+              <td class="text-center">
+                <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
+                <a href="/admin/post-delect.php?id=<?php echo $item['id'];?>" class="btn btn-danger btn-xs">删除</a>
+              </td>
+            </tr>
+          <?php endforeach ?>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="aside">
-    <div class="profile">
-      <img class="avatar" src="/static/uploads/avatar.jpg">
-      <h3 class="name">布头儿</h3>
-    </div>
-    <ul class="nav">
-      <li>
-        <a href="index.html"><i class="fa fa-dashboard"></i>仪表盘</a>
-      </li>
-      <li class="active">
-        <a href="#menu-posts" data-toggle="collapse">
-          <i class="fa fa-thumb-tack"></i>文章<i class="fa fa-angle-right"></i>
-        </a>
-        <ul id="menu-posts" class="collapse in">
-          <li class="active"><a href="posts.html">所有文章</a></li>
-          <li><a href="post-add.html">写文章</a></li>
-          <li><a href="categories.html">分类目录</a></li>
-        </ul>
-      </li>
-      <li>
-        <a href="comments.html"><i class="fa fa-comments"></i>评论</a>
-      </li>
-      <li>
-        <a href="users.html"><i class="fa fa-users"></i>用户</a>
-      </li>
-      <li>
-        <a href="#menu-settings" class="collapsed" data-toggle="collapse">
-          <i class="fa fa-cogs"></i>设置<i class="fa fa-angle-right"></i>
-        </a>
-        <ul id="menu-settings" class="collapse">
-          <li><a href="nav-menus.html">导航菜单</a></li>
-          <li><a href="slides.html">图片轮播</a></li>
-          <li><a href="settings.html">网站设置</a></li>
-        </ul>
-      </li>
-    </ul>
-  </div>
+  <?php $current_page = 'posts'; ?>
+  <?php include 'inc/sidebar.php'; ?>
 
   <script src="/static/assets/vendors/jquery/jquery.js"></script>
   <script src="/static/assets/vendors/bootstrap/js/bootstrap.js"></script>
+  <script>
+    $(function(){
+      var allDelete =  $('.btn-all');
+      //全部选择
+      var thcheckbox = $('th > input[type=checkbox]');
+      // 部分选择
+      var tdcheckbox = $('td > input[type=checkbox]');
+      //封装一个接收数组
+      var checkbox = [];
+      tdcheckbox.on('change',function(){
+        var $this = $(this);
+        var id = $this.data('id');
+        if($this.prop('checked')){
+          checkbox.includes(id) || checkbox.push(id);
+        }else{
+          checkbox.splice(checkbox.indexOf(id),1);
+        }
+        checkbox.length ? allDelete.fadeIn() : allDelete.fadeOut();
+        console.log(checkbox);
+        allDelete.prop('search','?id='+checkbox.join(','));
+      })
+      thcheckbox.on('change',function(){
+        var checked = $(this).prop('checked');
+        tdcheckbox.prop('checked',checked).trigger('change');
+      })
+    })
+  </script>
   <script>NProgress.done()</script>
 </body>
 </html>
