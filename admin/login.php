@@ -1,12 +1,18 @@
 <?php
 
  require_once '../config.php';
+<<<<<<< HEAD
 
  session_start();
  
  //用户登陆函数
 
 function xiu_login(){
+=======
+ session_start();
+
+function login(){
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b
   if(empty($_POST['email'])){
     $GLOBALS['message'] = '请填写邮箱！';
     return;
@@ -32,7 +38,11 @@ function xiu_login(){
     //mysqli_fetch_assoc（） 从结果集中取得一行作为关联数组。
     if($user = mysqli_fetch_assoc($result)){
       if($user['password'] == $password){
+<<<<<<< HEAD
         $_SESSION['current_login_user_id'] = $user['id'];
+=======
+        $_SESSION['current_login_user'] = $user;
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b
         header('Location: /admin/index.php');
         exit;
       }else{
@@ -51,7 +61,11 @@ function xiu_login(){
 
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
+<<<<<<< HEAD
   xiu_login();
+=======
+  login();
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b
 }
 
 ?>
@@ -66,8 +80,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
   <link rel="stylesheet" href="/static/assets/vendors/bootstrap/css/bootstrap.css">
   <link rel="stylesheet" href="/static/assets/css/admin.css">
   <link rel="stylesheet" href="/static/assets/vendors/animate/animate.min.css">
+<<<<<<< HEAD
   <link rel="stylesheet" href="/static/assets/vendors/nprogress/nprogress.css">
 
+=======
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b
   
 </head>
 <body>
@@ -91,7 +108,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
       <button class="btn btn-primary btn-block" href="index.php">登 录</button>
     </form>
   </div>
+<<<<<<< HEAD
   <script src="/static/assets/vendors/jquery/jquery.js"></script>
+=======
+  <script src="/static/assets/vendors/jquery/jquery.min.js"></script>
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b
   <script src="/static/assets/vendors/nprogress/nprogress.js"></script>
   <script>
     $(function($){
@@ -100,12 +121,20 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         var value = $(this).val();
         if(!value || !emailFormat.test(value)) return;
         $.get('/admin/api/avatar.php',{email:value},function(res){
+<<<<<<< HEAD
           // console.log(res);
           if(!res) return;
           $('.avatar').fadeOut(function () {
             $(this).on('load',function () {
               $(this).fadeIn();
               }).attr('src',res);
+=======
+          if(!res) return;
+          $('.avatar').fadeOut(function(){
+            $(this).on('load',function(){
+              $(this).fadeIn();
+            }).attr('src',res);
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b
           })
         })
       })

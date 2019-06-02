@@ -1,4 +1,5 @@
 <?php
+<<<<<<< HEAD
 require_once 'config.php';
 
 // 查询函数===========================
@@ -126,3 +127,15 @@ function xiu_get_current_user () {
     }
   }
   
+=======
+
+//当前用户登录
+function current_user(){
+    
+    session_start();
+    if(empty($_SESSION['current_login_user'])){
+        header('Location: /admin/login.php');
+        exit;
+    }
+}
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b

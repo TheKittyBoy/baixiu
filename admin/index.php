@@ -1,4 +1,5 @@
 <?php
+<<<<<<< HEAD
 require_once '../functions.php';
 // $current_user ---已得到当前用户
 
@@ -11,6 +12,11 @@ $comments_num = xiu_query('select count(1) as num from comments;')[0]['num'];
 $comments_draftus = xiu_query('select count(1) as num from comments where status = "held";')[0]['num'];
 
 
+=======
+// require_once '../functions.php';
+// current_user();
+  
+>>>>>>> 42894caeaa78d0b12217da4b185f9d84e5e09d4b
 ?>
 
 
