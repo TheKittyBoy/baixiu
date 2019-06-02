@@ -2,7 +2,7 @@
 require_once '../functions.php';
 // $current_user ---已得到当前用户
 
-// xiu_get_current_user();
+xiu_get_current_user();
 //xiu_query()返回是一个数组，所以我们取其中的具体值时应该选两项
 $posts_num = xiu_query('select count(1) as num from posts;')[0]['num'];
 $posts_draftus = xiu_query('select count(1) as num from posts where status = "drafted";')[0]['num'];

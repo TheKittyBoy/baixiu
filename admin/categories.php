@@ -141,7 +141,7 @@ $categories = xiu_query('select * from categories');
         <div class="col-md-8">
           <div class="page-action">
             <!-- show when multiple checked -->
-            <a class="btn btn-danger btn-sm" href="javascript:;" style="display: none">批量删除</a>
+            <a class="btn btn-danger btn-sm btn-delete" href="javascript:;" style="display: none">批量删除</a>
           </div>
           <table class="table table-striped table-bordered table-hover">
             <thead>
@@ -160,7 +160,7 @@ $categories = xiu_query('select * from categories');
                   <td><?php echo $item['slug']; ?></td>
                   <td class="text-center">
                     <a href="/admin/categories.php?id=<?php echo $item['id']; ?>" class="btn btn-info btn-xs btn-edit">编辑</a>
-                    <a href="/admin/category-deletct.php?id=<?php echo $item['id']; ?>" class="btn btn-danger btn-xs">删除</a>
+                    <a href="/admin/category-delect.php?id=<?php echo $item['id']; ?>" class="btn btn-danger btn-xs">删除</a>
                   </td>
                 </tr>
               <?php endforeach ?>
@@ -176,6 +176,32 @@ $categories = xiu_query('select * from categories');
 
   <script src="/static/assets/vendors/jquery/jquery.js"></script>
   <script src="/static/assets/vendors/bootstrap/js/bootstrap.js"></script>
+  <script>
+    $(function(){
+      //定义需要用的到元素
+      var btnDelete = $('.btn-delete');
+      var allcheckbox = $('th > input[type=checkbox]');
+      var checkbox = $('td > input[type=checkbox]');
+      //定义空的数组
+      var allchecked = [];
+      checkbox.on('change',function(){
+        var $this = $(this);
+        var $id = $this.data('id');
+        if($this.prop('checked')){
+          allchecked.includes($id) || allchecked.push($id);
+        }else{
+          allchecked.splice(allchecked.indexOf($id),1);
+        }
+        allchecked.length ? btnDelete.fadeIn() : btnDelete.fadeOut();
+        console.log(checkbox);
+        btnDelete.prop('search','?id='+allchecked.join(','));
+      })
+      allcheckbox.on('change',function(){
+        var checked = $(this).prop('checked');
+        checkbox.prop('checked',checked).trigger('change');
+      })
+    })
+  </script>
   <script>NProgress.done()</script>
 </body>
 </html>
