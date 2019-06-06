@@ -1,4 +1,5 @@
 <?php
+
 require_once '../functions.php';
 // $current_user ---已得到当前用户
 

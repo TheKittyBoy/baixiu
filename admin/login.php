@@ -33,6 +33,7 @@ function xiu_login(){
     if($user = mysqli_fetch_assoc($result)){
       if($user['password'] == $password){
         $_SESSION['current_login_user_id'] = $user['id'];
+
         header('Location: /admin/index.php');
         exit;
       }else{
@@ -52,6 +53,8 @@ function xiu_login(){
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
   xiu_login();
+
+
 }
 
 ?>
